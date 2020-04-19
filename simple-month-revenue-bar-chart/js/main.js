@@ -4,6 +4,8 @@
 *    Project 1 - Star Break Coffee
 */
 
+let flag = true
+
 let formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
 const formatCurrency = value => formatter.format(value).replace(/\D00$/, '');
 
@@ -29,6 +31,24 @@ const $group = $canvas.append('g')
   .attr('height', height)
   .attr('transform', `translate(${margin.left}, ${margin.top})`)
 
+/* Labels */
+// x-label
+const $xLabel =  $group.append('text')
+  .attr('x', width / 2)
+  .attr('y', height + 70)
+  .attr('font-size', 30)
+  .attr('text-anchor', 'middle')
+  .text('Month')
+
+// y-label
+const $yLabel = $group.append('text')
+  .attr('x', -(height / 2))
+  .attr('y', -75)
+  .attr('font-size', 30)
+  .attr('text-anchor', 'middle')
+  .attr('transform', 'rotate(-90)')
+  .text('Revenue')
+
 d3.json('data/revenues.json')
   .then(data => {
     // transform data
@@ -39,6 +59,7 @@ d3.json('data/revenues.json')
 
     console.log(data)
 
+    // Create scales
     const scaleX = d3.scaleBand()
       .domain(data.map(d => d.month))
       .range([0, width])
@@ -49,44 +70,57 @@ d3.json('data/revenues.json')
       .domain([0, d3.max(data, d => d.revenue)])
       .range([height, 0])
 
-    const $rects = $group.selectAll('rect')
-      .data(data)
-      .enter()
-      .append('rect')
-      .attr('fill', 'rebeccapurple')
-      .attr('width', scaleX.bandwidth)
-      .attr('height', d => height - scaleY(d.revenue))
-      .attr('x', d => scaleX(d.month))
-      .attr('y', d => scaleY(d.revenue))
+    // Axes groups
+    const $yAxisGroup = $group.append('g')
+    const $xAxisGroup = $group.append('g').attr('transform', `translate(0, ${height})`)
 
-    /* Axes */
-    const xAxisCall = d3.axisBottom(scaleX)
-    const yAxisCall = d3.axisLeft(scaleY).tickFormat(formatCurrency)
+    /* Update fn */
+    function update(_data) {
+      const value = flag ? 'Revenue' : 'Profit'
 
-    // Render y-axis
-    $group.append('g')
-      .call(yAxisCall)
+      // Update scale domains
+      scaleX.domain(_data.map(d => d.month))
+      scaleY.domain([0, d3.max(_data, d => d[value.toLowerCase()])])
 
-    // Render x-axis
-    $group.append('g')
-      .attr('transform', `translate(0, ${height})`)
-      .call(xAxisCall)
+      // Update Rects
+      // JOIN
+      const $rects = $group.selectAll('rect')
+        .data(_data)
 
-    /* Labels */
-    // x-label
-    $group.append('text')
-      .attr('x', width / 2)
-      .attr('y', height + 70)
-      .attr('font-size', 30)
-      .attr('text-anchor', 'middle')
-      .text('Month')
+      // EXIT old elements not present in new data
+      $rects.exit().remove()
 
-    // y-label
-    $group.append('text')
-      .attr('x', -(height / 2))
-      .attr('y', -75)
-      .attr('font-size', 30)
-      .attr('text-anchor', 'middle')
-      .attr('transform', 'rotate(-90)')
-      .text('Revenue')
+      // UPDATE old elements present in new data
+      $rects
+        .attr('width', scaleX.bandwidth)
+        .attr('height', d => height - scaleY(d[value.toLowerCase()]))
+        .attr('x', d => scaleX(d.month))
+        .attr('y', d => scaleY(d[value.toLowerCase()]))
+
+
+      // ENTER new elements present in new data
+      $rects.enter()
+        .append('rect')
+        .attr('fill', 'rebeccapurple')
+        .attr('width', scaleX.bandwidth)
+        .attr('height', d => height - scaleY(d[value.toLowerCase()]))
+        .attr('x', d => scaleX(d.month))
+        .attr('y', d => scaleY(d[value.toLowerCase()]))
+
+      /* Update axes */
+      const xAxisCall = d3.axisBottom(scaleX)
+      const yAxisCall = d3.axisLeft(scaleY).tickFormat(formatCurrency)
+      $yAxisGroup.call(yAxisCall)
+      $xAxisGroup.call(xAxisCall)
+
+      /* Update Y-Label */
+      $yLabel.text(value)
+    }
+
+    update(data)
+    d3.interval(() => {
+      flag = !flag
+      console.log('ye')
+      update(data)
+    }, 2000)
   })
