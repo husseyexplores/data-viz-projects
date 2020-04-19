@@ -49,6 +49,8 @@ const $yLabel = $group.append('text')
   .attr('transform', 'rotate(-90)')
   .text('Revenue')
 
+const t = d3.transition().duration(750)
+
 d3.json('data/revenues.json')
   .then(data => {
     // transform data
@@ -76,51 +78,57 @@ d3.json('data/revenues.json')
 
     /* Update fn */
     function update(_data) {
-      const value = flag ? 'Revenue' : 'Profit'
+      const value = flag ? 'revenue' : 'profit'
+
+      _data = flag ? _data : _data.map(d => ({...d, [value]: d[value] * Math.floor(Math.random() * 10)})).slice(1)
 
       // Update scale domains
       scaleX.domain(_data.map(d => d.month))
-      scaleY.domain([0, d3.max(_data, d => d[value.toLowerCase()])])
+      scaleY.domain([0, d3.max(_data, d => d[value])])
 
       // Update Rects
       // JOIN
       const $rects = $group.selectAll('rect')
-        .data(_data)
+        .data(_data, d => d.month)
 
       // EXIT old elements not present in new data
-      $rects.exit().remove()
-
-      // UPDATE old elements present in new data
-      $rects
-        .attr('width', scaleX.bandwidth)
-        .attr('height', d => height - scaleY(d[value.toLowerCase()]))
-        .attr('x', d => scaleX(d.month))
-        .attr('y', d => scaleY(d[value.toLowerCase()]))
-
+      $rects.exit()
+      .attr('fill', 'red')
+      .transition(t)
+      .attr('y', scaleY(0))
+      .attr('height', 0)
+      .remove()
 
       // ENTER new elements present in new data
       $rects.enter()
         .append('rect')
         .attr('fill', 'rebeccapurple')
         .attr('width', scaleX.bandwidth)
-        .attr('height', d => height - scaleY(d[value.toLowerCase()]))
         .attr('x', d => scaleX(d.month))
-        .attr('y', d => scaleY(d[value.toLowerCase()]))
+        .attr('y', scaleY(0))
+        .attr('height', 0)
+        // And UPDATE old elements present in our data
+        .merge($rects)
+        .transition(t)
+        .attr('x', d => scaleX(d.month))
+        .attr('y', d => scaleY(d[value]))
+        .attr('width', scaleX.bandwidth)
+        .attr('height', d => height - scaleY(d[value]))
+
 
       /* Update axes */
       const xAxisCall = d3.axisBottom(scaleX)
       const yAxisCall = d3.axisLeft(scaleY).tickFormat(formatCurrency)
-      $yAxisGroup.call(yAxisCall)
-      $xAxisGroup.call(xAxisCall)
+      $yAxisGroup.transition(t).call(yAxisCall)
+      $xAxisGroup.transition(t).call(xAxisCall)
 
       /* Update Y-Label */
-      $yLabel.text(value)
+      $yLabel.text(value[0].toUpperCase() + value.substring(1))
     }
 
     update(data)
     d3.interval(() => {
       flag = !flag
-      console.log('ye')
       update(data)
-    }, 2000)
+    }, 1000)
   })
