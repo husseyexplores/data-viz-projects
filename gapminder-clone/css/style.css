@@ -1,0 +1,61 @@
+#chart-area svg {
+	margin-left: auto;
+    margin-right: auto;
+    display: block;
+}
+
+#logo {
+	height:50px;
+}
+
+.navbar-brand {
+	height: 60px;
+	padding: 5px 0px;
+}
+
+#year-selector-area {
+	max-width: 400px;
+	margin: 20px auto 20px auto;
+	display: flex;
+	align-items: center;
+}
+
+h2 {
+	font-weight: 700;
+	margin: 0;
+}
+
+#year-selector-area input {
+	margin-left: 30px;
+	display: block;
+}
+
+#range {
+	margin-bottom: 50px;
+	padding-left: 100px;
+}
+
+#range svg {
+	display: block;
+	margin: 0 auto;
+}
+
+.range-body {
+	fill: #666;
+}
+.range-dragger {
+	fill: tomato;
+	cursor: pointer;
+}
+.range-label {
+	fill: #fff;
+	text-anchor: middle;
+	font-size: 2em;
+	pointer-events: none;
+}
+.range-axis line, .range-axis path {
+	stroke: #666;
+}
+.range-axis text {
+	fill: #666;
+}
