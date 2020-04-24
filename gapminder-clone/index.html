@@ -2,34 +2,51 @@
 <html>
 
 <head>
-    <meta charset="utf-8">
-    <meta name="description" content="">
-    <title>Gapminder Clone</title>
-    <!-- Tailwind -->
-    <link rel="stylesheet" href="css/tailwind.min.css">
-    <!-- Custom styling -->
-    <link rel="stylesheet" href="css/style.css">
+  <meta charset="utf-8">
+  <meta name="description" content="">
+  <title>Gapminder Clone</title>
+  <!-- Tailwind -->
+  <link rel="stylesheet" href="css/tailwind.min.css">
+  <link rel="stylesheet" href="css/custom-forms.min.css">
+  <!-- Custom styling -->
+  <link rel="stylesheet" href="css/style.css">
 </head>
 
-<body>
-    <!-- Bootstrap grid setup -->
-    <div class="container mx-auto">
-        <div class="row">
-            <div id="range"></div>
-            <div>
-
-            </div>
-            <div id="chart-area"></div>
+<body class="text-base">
+  <!-- Bootstrap grid setup -->
+  <div class="container mx-auto">
+    <div class="row">
+      <div id="range"></div>
+      <div class="flex justify-around">
+        <div class="self-end">
+          <button type="button" id="play-pause"
+            class="mb-2 px-5 py-3 rounded bg-indigo-600 text-white hover:bg-indigo-500 focus:shadow-outline uppercase font-semibold tracking-widest">play</button>
         </div>
-    </div>
 
-    <!-- External JS libraries -->
-    <script src="js/d3.min.js"></script>
-    <script src="js/d3-marcon.min.js"></script>
-    <script src="js/d3-tip.min.js"></script>
-    <script src="js/d3-format.min.js"></script>
-    <!-- Custom JS -->
-    <script src="js/main.js"></script>
+        <div>
+          <label class="block">
+            <span class="text-gray-700">Filter by continent</span>
+            <select id="filter-continents" class="form-select mt-1 block w-full">
+              <option value="">All</option>
+              <option value="africa">Africa</option>
+              <option value="americas">Americas</option>
+              <option value="asia">Asia</option>
+              <option value="europe">Europe</option>
+            </select>
+          </label>
+        </div>
+      </div>
+      <div class="mt-8" id="chart-area"></div>
+    </div>
+  </div>
+
+  <!-- External JS libraries -->
+  <script src="js/d3.min.js"></script>
+  <script src="js/d3-marcon.min.js"></script>
+  <script src="js/d3-tip.min.js"></script>
+  <script src="js/d3-format.min.js"></script>
+  <!-- Custom JS -->
+  <script src="js/main.js"></script>
 </body>
 
 </html>
