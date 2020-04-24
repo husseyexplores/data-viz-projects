@@ -4,6 +4,12 @@
 *    Project 2 - Gapminder Clone
 */
 
+const state = {
+	currentIndex: 0,
+	interval: null,
+	continent: '',
+}
+
 d3.json("data/data.json").then(_data => {
 	/* Data transformation */
 	_data.forEach(d => {
@@ -160,9 +166,14 @@ d3.json("data/data.json").then(_data => {
 			d.year = data.year
 		})
 
+		let _data = data.countries
+		if (state.continent !== '') {
+			_data = data.countries.filter(d => d.continent === state.continent)
+		}
+
 		/* remove/draw/update circles/bars/whatever */
 		const $circles = $vizContainer.selectAll('circle')
-			.data(data.countries, d => d.country)
+			.data(_data, d => d.country)
 
 		$circles.exit().remove()
 
@@ -180,9 +191,8 @@ d3.json("data/data.json").then(_data => {
 			.attr('opacity', 0.5)
 	}
 
-	/* Start the loop */
-	// update(allData.slice(-1)[0])
-	update(allData[0]) // initialize once instantly
+	update(allData[state.currentIndex]) // initialize once instantly
+
 	const yearToIndex = allData.reduce((map, d, idx) => {
 		map[d.year] = idx
 		return map
@@ -190,20 +200,61 @@ d3.json("data/data.json").then(_data => {
 
 	/* Year Range Slider */
 	const yearExtent = d3.extent(allData, d => +d.year)
-	makeRangeSlider({
+	const updaterFn = makeRangeSlider({
 		extent: yearExtent,
 		startValue: yearExtent[0],
 		width: 800,
 		element: '#range',
 		onChange: value => {
-			const idx = yearToIndex[value]
-			update(allData[idx])
-		}
+			state.currentIndex = yearToIndex[value]
+			update(allData[state.currentIndex])
+			handleTimer({ stop: true })
+		},
+		state,
 	})
+
+	/* Play-pause */
+	const $btn = d3.select('#play-pause')
+	$btn.on('click', () => {
+		handleTimer()
+	})
+
+	function handleTimer({ play, stop } = {}) {
+		const isPlaying = stop || $btn.text() === 'pause'
+		const isPaused = play || !isPlaying
+
+		if (isPaused) {
+			// start the loop
+			state.interval = setInterval(() => {
+				state.currentIndex++;
+				if (state.currentIndex >= allData.length) state.currentIndex = 0
+
+				update(allData[state.currentIndex])
+				updaterFn(allData[state.currentIndex].year)
+			}, 100);
+			$btn.text('pause')
+			return
+		}
+
+		if (isPlaying) {
+			// stop the loop
+			clearInterval(state.interval)
+			$btn.text('play')
+			return
+		}
+	}
+
+	/* Filter */
+	const $selectContinent = d3.select('#filter-continents')
+		.on('change', () => {
+			const value = $selectContinent.property('value')
+			state.continent = value
+			update(allData[state.currentIndex])
+		})
 })
 
 /* https://bl.ocks.org/HarryStevens/d1bc769436b43438d9b02d25a3315e0d */
-function makeRangeSlider({ extent, startValue, width = 600, element, onChange = () => {} }) {
+function makeRangeSlider({ extent, startValue, width = 600, element, onChange = () => {}, state = {} }) {
 	let sliderRadius = 50,
 		currentValue = startValue ? startValue : extent[0],
 		sliderPadding = 10,
@@ -320,15 +371,18 @@ function makeRangeSlider({ extent, startValue, width = 600, element, onChange = 
 		updateSliderPosition()
 	}
 
-	function updateSliderPosition() {
+	function updateSliderPosition(pos) {
+		const _value = pos || currentValue
 		rangeSvg.select(".range-handle")
-			.attr("cx", range_x(currentValue));
+			.attr("cx", range_x(_value));
 
 		rangeSvg.select(".range-label")
-			.attr("x", range_x(currentValue))
-			.text(currentValue);
+			.attr("x", range_x(_value))
+			.text(_value);
 
 		rangeSvg.select(".range-pointer")
-			.attr("points", calcPointerPoints(currentValue));
+			.attr("points", calcPointerPoints(_value));
 	}
+
+	return updateSliderPosition
 }
