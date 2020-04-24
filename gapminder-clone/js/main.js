@@ -180,6 +180,9 @@ d3.json("data/data.json").then(_data => {
 		const $updateSelection = $circles.enter()
 			.append('circle')
 			.attr('fill', d => ordinalScale(d.continent))
+			.attr('cx', d => xScale(d.income))
+			.attr('cy', d => yScale(d.life_exp))
+			.attr('r', d => sizeScale(d.population))
 			.on('mouseover', $tip.show)
 			.on('mouseout', $tip.hide)
 			.merge($circles)
@@ -200,7 +203,7 @@ d3.json("data/data.json").then(_data => {
 
 	/* Year Range Slider */
 	const yearExtent = d3.extent(allData, d => +d.year)
-	const updaterFn = makeRangeSlider({
+	const updateSlider = makeRangeSlider({
 		extent: yearExtent,
 		startValue: yearExtent[0],
 		width: 800,
@@ -209,7 +212,7 @@ d3.json("data/data.json").then(_data => {
 			state.currentIndex = yearToIndex[value]
 			update(allData[state.currentIndex])
 
-			handleTimer({ stop })
+			handleTimer({ stop: true })
 		},
 		state,
 	})
@@ -234,7 +237,7 @@ d3.json("data/data.json").then(_data => {
 				if (state.currentIndex >= allData.length) state.currentIndex = 0
 
 				update(allData[state.currentIndex])
-				updaterFn(allData[state.currentIndex].year)
+				updateSlider(allData[state.currentIndex].year)
 			}, 100);
 			$btn.text('pause')
 		}
@@ -252,7 +255,7 @@ d3.json("data/data.json").then(_data => {
 })
 
 /* https://bl.ocks.org/HarryStevens/d1bc769436b43438d9b02d25a3315e0d */
-function makeRangeSlider({ extent, startValue, width = 600, element, onChange = () => {}, state = {} }) {
+function makeRangeSlider({ extent, startValue, width = 600, element, onChange = () => {} }) {
 	let sliderRadius = 50,
 		currentValue = startValue ? startValue : extent[0],
 		sliderPadding = 10,
