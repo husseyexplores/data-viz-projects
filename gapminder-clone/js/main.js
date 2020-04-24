@@ -209,7 +209,7 @@ d3.json("data/data.json").then(_data => {
 			state.currentIndex = yearToIndex[value]
 			update(allData[state.currentIndex])
 
-			handleTimer({ stop })
+			handleTimer({ stop: true })
 		},
 		state,
 	})
