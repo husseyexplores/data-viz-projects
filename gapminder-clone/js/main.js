@@ -139,12 +139,28 @@ d3.json("data/data.json").then(_data => {
 		.text(d => d)
 
 	/* Update/render visualization */
+	const formatCurrency = d3.format('$,.0f')
+	const formatPopulation = d3.format(',.0f')
+	const $tip = d3.tip().attr('class', 'd3-tip').html(d => `
+		<div><strong style="color: skyblue;">Country:</strong> <span style="margin-left: 5px; font-weight: 400;">${d.country}</span></div>
+		<div><strong style="color: skyblue;">Continent:</strong> <span style="margin-left: 5px; font-weight: 400;">${d.continent}</span></div>
+		<div><strong style="color: skyblue;">Income:</strong> <span style="margin-left: 5px; font-weight: 400;">${formatCurrency(d.income)}</span></div>
+		<div><strong style="color: skyblue;">Life Expectancy:</strong> <span style="margin-left: 5px; font-weight: 400;">${d.life_exp} years</span></div>
+		<div><strong style="color: skyblue;">Population:</strong> <span style="margin-left: 5px; font-weight: 400;">${formatPopulation(d.population)}</span></div>
+		<div><strong style="color: skyblue;">Year:</strong> <span style="margin-left: 5px; font-weight: 400;">${d.year}</span></div>
+	`);
+	$vizContainer.call($tip)
+
 	function update(data) {
 		const t = d3.transition().duration(100)
 		$yearLabel.text(data.year)
 
-		/* remove/draw/update circles/bars/whatever */
+		// Add year to each data point for easy access in d3 tip
+		data.countries.forEach(d => {
+			d.year = data.year
+		})
 
+		/* remove/draw/update circles/bars/whatever */
 		const $circles = $vizContainer.selectAll('circle')
 			.data(data.countries, d => d.country)
 
@@ -153,6 +169,8 @@ d3.json("data/data.json").then(_data => {
 		const $updateSelection = $circles.enter()
 			.append('circle')
 			.attr('fill', d => ordinalScale(d.continent))
+			.on('mouseover', $tip.show)
+			.on('mouseout', $tip.hide)
 			.merge($circles)
 
 		$updateSelection.transition(t)
@@ -160,10 +178,6 @@ d3.json("data/data.json").then(_data => {
 			.attr('cy', d => yScale(d.life_exp))
 			.attr('r', d => sizeScale(d.population))
 			.attr('opacity', 0.5)
-
-			// update each circle's innerHTML
-		$updateSelection.html(d => `
-		<title>Country: ${d.country}\nGDP: ${d3.format('$')(d.income)}\nLife Expectancy: ${d.life_exp}</title>`)
 	}
 
 	/* Start the loop */
